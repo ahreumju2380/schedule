@@ -5,18 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>교육 일정 관리 대시보드</title>
     
-    <!-- Fonts -->
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- FullCalendar -->
+    <!-- FullCalendar v6 -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 
     <script>
@@ -60,6 +58,7 @@
         .fc .fc-button-primary:not(:disabled).fc-button-active,
         .fc .fc-button-primary:not(:disabled):active { background-color: #002c4c; border-color: #002c4c; }
         
+        /* 달력 일정 바 가늘게 3줄 보기 설정 */
         .fc-event { 
             border-radius: 4px; 
             border: none; 
@@ -104,7 +103,6 @@
 </head>
 <body class="text-slate-800 h-screen overflow-hidden flex flex-col">
 
-    <!-- [개편 완료] 요청하신대로 각 항목들을 한 줄씩 깔끔하게 구분한 모바일 안심 헤더 구조 -->
     <header class="bg-primary text-white shadow-md p-4 flex flex-col gap-3.5 z-10 shrink-0">
         
         <!-- 1열: 대시보드 타이틀 정보 -->
@@ -261,10 +259,10 @@
                 <form id="eventForm" class="space-y-5">
                     <input type="hidden" id="eventId">
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- [요청사항 반영] 일정구분, 거점, 상세 교육장을 모바일 세로/PC 가로 반응형으로 3단 분할 구성 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">일정 구분 *</label>
-                            <!-- [요청사항 반영] 워크숍 옵션 추가 -->
                             <select id="eventType" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                                 <option value="교육">교육 (본 과정)</option>
                                 <option value="세팅">세팅 (사전 준비)</option>
@@ -273,20 +271,23 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">거점 *</label>
-                            <!-- [요청사항 반영] '기타' 옵션 추가 -->
                             <select id="eventLocation" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
-                                <option value="" disabled selected>거점을 선택하세요</option>
-                                <option value="과천(3층 대강당)">과천(3층 대강당)</option>
-                                <option value="마곡(2층 다목적홀)">마곡(2층 다목적홀)</option>
-                                <option value="구미(위캔두 2층 연수실 2)">구미(위캔두 2층 연수실 2)</option>
-                                <option value="용인(3층 중연수실)">용인(3층 중연수실)</option>
+                                <option value="" disabled selected>거점 선택</option>
+                                <option value="과천">과천</option>
+                                <option value="마곡">마곡</option>
+                                <option value="구미">구미</option>
+                                <option value="용인">용인</option>
                                 <option value="기타">기타</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">상세 교육장</label>
+                            <input type="text" id="eventVenue" placeholder="예: 3층 대강당" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="sm:col-span-2">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2">
                             <label class="block text-sm font-medium text-slate-700 mb-1">과정명 *</label>
                             <input type="text" id="eventCourse" placeholder="예: 신입사원 온보딩" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                         </div>
@@ -417,11 +418,11 @@
         let eventToDeleteId = null;
         let eventsData = [];
 
-        // 로컬 테스트용 임시 데이터
+        // 로컬 테스트용 임시 데이터 (기존 마곡(2층 다목적홀) 등에서 파싱 규칙이 완벽하게 적용되도록 사전에 선언)
         const mockData = [
             { id: 'ev_1', type: '교육', startDate: '2026-06-20', endDate: '2026-06-22', location: '과천(3층 대강당)', courseName: '신입사원 온보딩', session: '1차', instructorName: '김강사', instructorPhone: '010-1234-5678', managerName: '이운영', managerPhone: '010-9876-5432', attendees: '30', memo: '마이크 2대 추가 세팅 필요\n다과상 앞쪽에 배치 요망' },
             { id: 'ev_2', type: '세팅', startDate: '2026-06-25', endDate: '2026-06-25', location: '마곡(2층 다목적홀)', courseName: '리더십 과정', session: '2차', instructorName: '박강사', instructorPhone: '010-1111-2222', managerName: '최운영', managerPhone: '010-3333-4444', attendees: '0', memo: '' },
-            { id: 'ev_3', type: '교육', startDate: '2026-06-26', endDate: '2026-06-28', location: '마곡(2층 다목적홀)', courseName: '리더십 과정', session: '2차', instructorName: '박강사', instructorPhone: '010-1111-2222', managerName: '최운영', managerPhone: '010-3333-4444', attendees: '25', memo: '본부장님 격려사 예정 (오전 10시)' }
+            { id: 'ev_3', type: '워크숍', startDate: '2026-06-26', endDate: '2026-06-28', location: '마곡(2층 다목적홀)', courseName: '전사 임직원 워크숍', session: '2차', instructorName: '박강사', instructorPhone: '010-1111-2222', managerName: '최운영', managerPhone: '010-3333-4444', attendees: '25', memo: '본부장님 격려사 예정 (오전 10시)' }
         ];
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -659,6 +660,7 @@
             if (!isEdit) {
                 form.reset();
                 document.getElementById('eventId').value = '';
+                document.getElementById('eventVenue').value = ''; // 세부 교육장 필드 초기화
                 currentEditingId = null;
                 title.textContent = '새 일정 등록';
                 const today = new Date().toISOString().split('T')[0];
@@ -671,26 +673,41 @@
                     document.getElementById('eventId').value = ev.id;
                     
                     let safeType = ev.type ? ev.type.trim() : '';
-                    if (!['교육', '세팅', '워크숍'].includes(safeType)) {
-                        safeType = safeType.includes('세팅') ? '세팅' : '교육';
-                    }
+                    if (safeType.includes('세팅')) safeType = '세팅';
+                    else if (safeType.includes('워크숍')) safeType = '워크숍';
+                    else safeType = '교육';
                     
                     let typeSelect = document.getElementById('eventType');
                     typeSelect.value = safeType;
                     if (!typeSelect.value) typeSelect.value = '교육';
 
+                    // [요청사항 반영] 거점 텍스트에서 '거점'과 괄호 안의 '상세 교육장'을 똑똑하게 분리 추출
+                    let fullLocation = ev.location ? ev.location.trim() : '';
+                    let baseLocation = '';
+                    let venueText = '';
+
+                    const regexMatch = fullLocation.match(/^([^(]+)\s*(?:\(([^)]+)\))?/);
+                    if (regexMatch) {
+                        baseLocation = regexMatch[1].trim();
+                        venueText = regexMatch[2] ? regexMatch[2].trim() : '';
+                    } else {
+                        baseLocation = fullLocation;
+                    }
+
                     let locSelect = document.getElementById('eventLocation');
-                    let safeLoc = ev.location ? ev.location.trim() : '';
-                    let matchedOpt = Array.from(locSelect.options).find(opt => opt.value !== "" && (opt.value.includes(safeLoc) || safeLoc.includes(opt.value.split('(')[0])));
+                    const allowedBases = ['과천', '마곡', '구미', '용인', '기타'];
                     
-                    if (matchedOpt) {
-                        locSelect.value = matchedOpt.value;
-                    } else if (safeLoc) {
-                        locSelect.add(new Option(safeLoc, safeLoc));
-                        locSelect.value = safeLoc;
+                    if (allowedBases.includes(baseLocation)) {
+                        locSelect.value = baseLocation;
+                    } else if (baseLocation) {
+                        locSelect.value = '기타';
+                        // 시트에 기존 거점 규칙 없이 자유 타이핑된 상태인 경우, 전체를 상세 교육장 칸으로 승계합니다.
+                        venueText = fullLocation;
                     } else {
                         locSelect.value = "";
                     }
+
+                    document.getElementById('eventVenue').value = venueText;
 
                     document.getElementById('eventCourse').value = ev.courseName || '';
                     document.getElementById('eventSession').value = ev.session || '';
@@ -716,10 +733,15 @@
             const form = document.getElementById('eventForm');
             if(!form.checkValidity()) { form.reportValidity(); return; }
 
+            // [요청사항 반영] 거점과 상세 교육장 정보를 구글 시트 포맷인 '거점(교육장)' 구조로 가공
+            const selectedBase = document.getElementById('eventLocation').value;
+            const enteredVenue = document.getElementById('eventVenue').value.trim();
+            const combinedLocation = enteredVenue ? `${selectedBase}(${enteredVenue})` : selectedBase;
+
             const newEvent = {
                 id: document.getElementById('eventId').value || 'ev_' + Date.now(),
                 type: document.getElementById('eventType').value,
-                location: document.getElementById('eventLocation').value,
+                location: combinedLocation,
                 courseName: document.getElementById('eventCourse').value,
                 session: document.getElementById('eventSession').value,
                 startDate: document.getElementById('eventStartDate').value,
