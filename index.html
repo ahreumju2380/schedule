@@ -103,43 +103,47 @@
 </head>
 <body class="text-slate-800 h-screen overflow-hidden flex flex-col">
 
-    <header class="bg-primary text-white shadow-md p-4 flex flex-col gap-3.5 z-10 shrink-0">
-        
-        <!-- 1열: 대시보드 타이틀 정보 -->
-        <div class="flex items-center gap-2.5">
-            <i class="fa-solid fa-calendar-check text-xl md:text-2xl text-secondary"></i>
-            <h1 class="text-base md:text-xl font-bold tracking-tight">교육 일정 관리 대시보드</h1>
+    <!-- [반응형 3단 대폭 개편] 모바일에서 절대 겹치지 않고 한 줄씩 흐르는 헤더 레이아웃 -->
+    <header class="bg-primary text-white shadow-md p-3 md:p-4 flex flex-col gap-3.5 z-10 shrink-0">
+        <!-- 1열: 대시보드 타이틀 영역 -->
+        <div class="flex items-center justify-between md:justify-start gap-3">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-calendar-check text-xl md:text-2xl text-secondary"></i>
+                <h1 class="text-base md:text-xl font-bold tracking-tight">교육 일정 관리 대시보드</h1>
+            </div>
+            <!-- 모바일용 미니 등록 버튼 -->
+            <button onclick="openEditModal()" class="md:hidden bg-secondary hover:bg-teal-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-1">
+                <i class="fa-solid fa-plus text-[10px]"></i> 등록
+            </button>
         </div>
 
-        <!-- 2열: 거점 필터 단독 배치 ('기타' 옵션 추가) -->
-        <div class="flex items-center gap-2.5 bg-white/5 px-3 py-2 rounded-xl border border-white/10">
-            <label for="locationFilter" class="text-xs md:text-sm font-semibold text-slate-200 shrink-0 flex items-center gap-1.5">
-                <i class="fa-solid fa-filter text-secondary"></i> 거점 필터:
-            </label>
-            <select id="locationFilter" onchange="applyLocationFilter()" class="flex-grow bg-slate-800 text-white border border-white/20 rounded-lg px-2 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer">
+        <!-- 2열: 장소 필터링 드롭다운 영역 -->
+        <div class="flex items-center gap-2">
+            <label for="locationFilter" class="text-xs md:text-sm font-medium text-slate-200 shrink-0"><i class="fa-solid fa-filter"></i> 장소 필터:</label>
+            <select id="locationFilter" onchange="applyLocationFilter()" class="w-full bg-white/10 text-white border border-white/20 rounded-lg px-2.5 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer">
                 <option value="all" class="text-slate-800">전체보기</option>
-                <option value="과천" class="text-slate-800">과천(3층 대강당)</option>
-                <option value="마곡" class="text-slate-800">마곡(2층 다목적홀)</option>
-                <option value="구미" class="text-slate-800">구미(위캔두 2층 연수실 2)</option>
-                <option value="용인" class="text-slate-800">용인(3층 중연수실)</option>
+                <option value="과천" class="text-slate-800">과천</option>
+                <option value="마곡" class="text-slate-800">마곡</option>
+                <option value="구미" class="text-slate-800">구미</option>
+                <option value="용인" class="text-slate-800">용인</option>
                 <option value="기타" class="text-slate-800">기타</option>
             </select>
         </div>
 
-        <!-- 3열: 연동 상태 배지 + 새 일정 등록 버튼 배치 -->
-        <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-                <div id="sync-status" class="text-[11px] md:text-xs text-secondary bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> 시트 연동 대기중
-                </div>
-                <button id="troubleshootBtn" onclick="openModal('errorModal')" class="hidden bg-red-500/20 text-red-100 hover:bg-red-500/40 px-2 py-1.5 rounded-full text-xs font-medium transition-colors border border-red-400/50">
-                    <i class="fa-solid fa-circle-question"></i> 해결방법
-                </button>
+        <!-- 3열: 동기화 상태 배지 및 PC용 등록 버튼 영역 -->
+        <div class="flex items-center justify-between md:justify-end gap-3">
+            <div id="sync-status" class="text-xs md:text-sm text-secondary bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <i class="fa-solid fa-cloud-arrow-up"></i> 시트 연동 대기중
             </div>
             
-            <button onclick="openEditModal()" class="bg-secondary hover:bg-teal-500 text-white px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-colors shadow-md flex items-center gap-1.5">
-                <i class="fa-solid fa-plus text-[10px]"></i> 새 일정 등록
-            </button>
+            <div class="flex gap-2 shrink-0">
+                <button id="troubleshootBtn" onclick="openModal('errorModal')" class="hidden bg-red-500/20 text-red-100 hover:bg-red-500/40 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border border-red-400/50">
+                    <i class="fa-solid fa-circle-question"></i> 해결방법
+                </button>
+                <button onclick="openEditModal()" class="hidden md:flex bg-secondary hover:bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> 새 일정 등록
+                </button>
+            </div>
         </div>
     </header>
 
@@ -172,10 +176,11 @@
                             <p class="text-sm font-bold" id="viewDates"></p>
                         </div>
                     </div>
+                    <!-- '거점' -> '장소'로 변경 -->
                     <div class="flex items-start gap-3">
                         <div class="bg-slate-100 p-2 rounded-lg text-primary"><i class="fa-solid fa-location-dot w-5 text-center"></i></div>
                         <div>
-                            <p class="text-xs text-slate-500 font-medium">거점</p>
+                            <p class="text-xs text-slate-500 font-medium">장소</p>
                             <p class="text-sm font-bold" id="viewLocation"></p>
                         </div>
                     </div>
@@ -193,7 +198,7 @@
                     <p class="text-xs text-amber-700 font-bold mb-1 flex items-center gap-1">
                         <i class="fa-regular fa-note-sticky"></i> 메모 / 특이사항
                     </p>
-                    <p class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed animate-fade-in" id="viewMemo"></p>
+                    <p class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed" id="viewMemo"></p>
                 </div>
 
                 <hr class="border-slate-100 mb-6">
@@ -259,7 +264,7 @@
                 <form id="eventForm" class="space-y-5">
                     <input type="hidden" id="eventId">
                     
-                    <!-- [요청사항 반영] 일정구분, 거점, 상세 교육장을 모바일 세로/PC 가로 반응형으로 3단 분할 구성 -->
+                    <!-- [분리 입력 추가] 장소 대분류 및 상세 교육장 텍스트박스 구성 -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">일정 구분 *</label>
@@ -270,9 +275,9 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">거점 *</label>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">장소 *</label>
                             <select id="eventLocation" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
-                                <option value="" disabled selected>거점 선택</option>
+                                <option value="" disabled selected>장소 선택</option>
                                 <option value="과천">과천</option>
                                 <option value="마곡">마곡</option>
                                 <option value="구미">구미</option>
@@ -418,7 +423,7 @@
         let eventToDeleteId = null;
         let eventsData = [];
 
-        // 로컬 테스트용 임시 데이터 (기존 마곡(2층 다목적홀) 등에서 파싱 규칙이 완벽하게 적용되도록 사전에 선언)
+        // 로컬 테스트용 임시 데이터
         const mockData = [
             { id: 'ev_1', type: '교육', startDate: '2026-06-20', endDate: '2026-06-22', location: '과천(3층 대강당)', courseName: '신입사원 온보딩', session: '1차', instructorName: '김강사', instructorPhone: '010-1234-5678', managerName: '이운영', managerPhone: '010-9876-5432', attendees: '30', memo: '마이크 2대 추가 세팅 필요\n다과상 앞쪽에 배치 요망' },
             { id: 'ev_2', type: '세팅', startDate: '2026-06-25', endDate: '2026-06-25', location: '마곡(2층 다목적홀)', courseName: '리더십 과정', session: '2차', instructorName: '박강사', instructorPhone: '010-1111-2222', managerName: '최운영', managerPhone: '010-3333-4444', attendees: '0', memo: '' },
@@ -436,7 +441,6 @@
                     center: 'title',
                     right: ''
                 },
-                // [요청사항 반영] 거점 필터링 결과 반영
                 events: function(info, successCallback, failureCallback) {
                     const filterValue = document.getElementById('locationFilter').value;
                     
@@ -450,19 +454,12 @@
                         endDateObj.setDate(endDateObj.getDate() + 1);
                         let fcEndDate = endDateObj.toISOString().split('T')[0];
 
-                        // 안전하게 타입 매칭
                         let safeType = e.type ? e.type.trim() : '';
-                        let isEdu = !safeType.includes('세팅'); 
+                        let color = '#005088'; // 기본 교육 (청색)
+                        if (safeType.includes('세팅')) color = '#11caa0'; // 세팅 (청록색)
+                        else if (safeType.includes('워크숍')) color = '#8b5cf6'; // 워크숍 (보라색)
                         
-                        // [요청사항 반영] 교육(청색), 세팅(청록색), 워크숍(보라색) 색상 가변 매핑
-                        let color = '#005088'; // 기본 교육
-                        if (safeType === '세팅') color = '#11caa0';
-                        else if (safeType === '워크숍') color = '#8b5cf6';
-                        
-                        // 달력에는 거점 이름 중 괄호 앞 부분만 짧게 표기
                         let shortLocation = e.location ? e.location.split('(')[0] : '';
-
-                        // 일정 타이틀 생성
                         let displayType = safeType || '교육';
                         let eventTitle = `[${displayType}] ${shortLocation} ${e.session}`;
                         if (displayType !== '세팅' && e.courseName) {
@@ -505,7 +502,6 @@
             }
         }
 
-        // 날짜 객체 안전 파싱 유틸리티
         function formatDateString(dateVal) {
             if (!dateVal) return '';
             if (typeof dateVal === 'string') return dateVal.split('T')[0];
@@ -534,12 +530,13 @@
                 .then(data => {
                     if(data.error) throw new Error(data.error);
                     
+                    // 장소/메모 통합 이중 매핑 보정
                     eventsData = data.map((e, index) => {
                         const id = e.id || e.ID || '';
                         const type = e.type || e['일정구분'] || '';
                         const startDate = e.startDate || e['시작일'] || '';
                         const endDate = e.endDate || e['종료일'] || '';
-                        const location = e.location || e['거점'] || '';
+                        const location = e.location || e['장소'] || e['거점'] || '';
                         const courseName = e.courseName || e['과정명'] || '';
                         const session = e.session || e['차수'] || '';
                         const instructorName = e.instructorName || e['강사명'] || '';
@@ -547,7 +544,7 @@
                         const managerName = e.managerName || e['운영자'] || '';
                         const managerPhone = e.managerPhone || e['운영자연락처'] || '';
                         const attendees = e.attendees || e['입과인원'] || '0';
-                        const memo = e.memo || e['메모'] || '';
+                        const memo = e.memo !== undefined ? e.memo : (e['메모'] !== undefined ? e['메모'] : '');
 
                         return {
                             id: id ? String(id) : 'ev_auto_' + Date.now() + '_' + index,
@@ -562,7 +559,7 @@
                             managerName: String(managerName).trim(),
                             managerPhone: String(managerPhone).trim(),
                             attendees: String(attendees).trim(),
-                            memo: String(memo).trim()
+                            memo: String(memo) // 메모 스트링 변환 강제
                         };
                     });
 
@@ -574,7 +571,6 @@
                     console.error('Fetch Error:', error);
                     statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> 연동 오류 (임시 데이터)';
                     showToast('시트 연결에 실패하여 임시 데이터를 불러옵니다.', 'error');
-                    
                     troubleshootBtn.classList.remove('hidden');
 
                     eventsData = [...mockData];
@@ -607,9 +603,9 @@
             currentEditingId = eventData.id;
             
             let safeType = eventData.type ? eventData.type.trim() : '';
+            let isEdu = !safeType.includes('세팅'); 
             let displayType = safeType || '교육';
 
-            // [요청사항 반영] 일정 구분에 따른 테마 컬러 바 스타일 가변 적용
             let barColor = 'bg-blue-400';
             let badgeStyle = 'bg-blue-800 text-blue-100';
             if (safeType === '세팅') {
@@ -632,7 +628,7 @@
             document.getElementById('viewAttendees').textContent = eventData.attendees && eventData.attendees !== '0' ? `${eventData.attendees}명` : '-';
             
             const memoEl = document.getElementById('viewMemo');
-            if (eventData.memo && eventData.memo.trim() !== "") {
+            if (eventData.memo && eventData.memo.trim() !== "" && eventData.memo !== 'undefined') {
                 memoEl.textContent = eventData.memo;
                 memoEl.classList.remove('text-slate-400', 'italic');
                 memoEl.classList.add('text-slate-700');
@@ -660,7 +656,7 @@
             if (!isEdit) {
                 form.reset();
                 document.getElementById('eventId').value = '';
-                document.getElementById('eventVenue').value = ''; // 세부 교육장 필드 초기화
+                document.getElementById('eventVenue').value = '';
                 currentEditingId = null;
                 title.textContent = '새 일정 등록';
                 const today = new Date().toISOString().split('T')[0];
@@ -672,42 +668,31 @@
                 if(ev) {
                     document.getElementById('eventId').value = ev.id;
                     
-                    let safeType = ev.type ? ev.type.trim() : '';
-                    if (safeType.includes('세팅')) safeType = '세팅';
-                    else if (safeType.includes('워크숍')) safeType = '워크숍';
-                    else safeType = '교육';
-                    
-                    let typeSelect = document.getElementById('eventType');
-                    typeSelect.value = safeType;
-                    if (!typeSelect.value) typeSelect.value = '교육';
+                    let safeType = ev.type ? ev.type.trim() : '교육';
+                    document.getElementById('eventType').value = safeType;
 
-                    // [요청사항 반영] 거점 텍스트에서 '거점'과 괄호 안의 '상세 교육장'을 똑똑하게 분리 추출
-                    let fullLocation = ev.location ? ev.location.trim() : '';
-                    let baseLocation = '';
-                    let venueText = '';
-
-                    const regexMatch = fullLocation.match(/^([^(]+)\s*(?:\(([^)]+)\))?/);
-                    if (regexMatch) {
-                        baseLocation = regexMatch[1].trim();
-                        venueText = regexMatch[2] ? regexMatch[2].trim() : '';
-                    } else {
-                        baseLocation = fullLocation;
+                    // 장소 파싱: '과천(3층 대강당)' -> '과천' 드롭다운 선택, '3층 대강당' 텍스트박스 바인딩
+                    let safeLoc = ev.location ? ev.location.trim() : '';
+                    let mainLoc = safeLoc;
+                    let venueLoc = '';
+                    if (safeLoc.includes('(') && safeLoc.endsWith(')')) {
+                        const parts = safeLoc.split('(');
+                        mainLoc = parts[0].trim();
+                        venueLoc = parts[1].slice(0, -1).trim();
                     }
 
                     let locSelect = document.getElementById('eventLocation');
-                    const allowedBases = ['과천', '마곡', '구미', '용인', '기타'];
-                    
-                    if (allowedBases.includes(baseLocation)) {
-                        locSelect.value = baseLocation;
-                    } else if (baseLocation) {
-                        locSelect.value = '기타';
-                        // 시트에 기존 거점 규칙 없이 자유 타이핑된 상태인 경우, 전체를 상세 교육장 칸으로 승계합니다.
-                        venueText = fullLocation;
+                    let matchedOpt = Array.from(locSelect.options).find(opt => opt.value !== "" && opt.value === mainLoc);
+                    if (matchedOpt) {
+                        locSelect.value = mainLoc;
+                        document.getElementById('eventVenue').value = venueLoc;
+                    } else if (safeLoc) {
+                        locSelect.value = "기타";
+                        document.getElementById('eventVenue').value = safeLoc; // 매칭되지 않는 완전 가변 텍스트 전체 전달
                     } else {
                         locSelect.value = "";
+                        document.getElementById('eventVenue').value = "";
                     }
-
-                    document.getElementById('eventVenue').value = venueText;
 
                     document.getElementById('eventCourse').value = ev.courseName || '';
                     document.getElementById('eventSession').value = ev.session || '';
@@ -718,7 +703,7 @@
                     document.getElementById('eventInstPhone').value = ev.instructorPhone || '';
                     document.getElementById('eventMgrName').value = ev.managerName || '';
                     document.getElementById('eventMgrPhone').value = ev.managerPhone || '';
-                    document.getElementById('eventMemo').value = ev.memo || ''; 
+                    document.getElementById('eventMemo').value = (ev.memo && ev.memo !== 'undefined') ? ev.memo : ''; 
                 }
             }
             openModal('editModal');
@@ -733,10 +718,10 @@
             const form = document.getElementById('eventForm');
             if(!form.checkValidity()) { form.reportValidity(); return; }
 
-            // [요청사항 반영] 거점과 상세 교육장 정보를 구글 시트 포맷인 '거점(교육장)' 구조로 가공
-            const selectedBase = document.getElementById('eventLocation').value;
-            const enteredVenue = document.getElementById('eventVenue').value.trim();
-            const combinedLocation = enteredVenue ? `${selectedBase}(${enteredVenue})` : selectedBase;
+            // 장소 결합 처리: '마곡' + '2층 대강당' -> '마곡(2층 대강당)' 포맷 변환
+            const locVal = document.getElementById('eventLocation').value;
+            const venueVal = document.getElementById('eventVenue').value.trim();
+            const combinedLocation = venueVal ? `${locVal}(${venueVal})` : locVal;
 
             const newEvent = {
                 id: document.getElementById('eventId').value || 'ev_' + Date.now(),
@@ -751,7 +736,7 @@
                 instructorPhone: document.getElementById('eventInstPhone').value,
                 managerName: document.getElementById('eventMgrName').value,
                 managerPhone: document.getElementById('eventMgrPhone').value,
-                memo: document.getElementById('eventMemo').value
+                memo: document.getElementById('eventMemo').value // 메모 정상 바인딩
             };
 
             if (document.getElementById('eventId').value) {
@@ -821,6 +806,7 @@
                 if(result.success) {
                     statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-400"></i> 동기화 완료';
                     showToast(successMessage, 'success');
+                    fetchDataFromServer(); // 저장 완료 후 백엔드에서 데이터 강제 갱신으로 화면 정합성 확보
                 } else {
                     throw new Error('Save Failed: ' + result.error);
                 }
