@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>교육 일정 관리 대시보드</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#005088', 
+                        secondary: '#11caa0', 
+                        light: '#f3f0df', 
+                        dark: '#1e293b', 
+                        graybg: '#f8fafc' 
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .fc {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 10px;
+            height: 100%;
+        }
+        
+        .fc .fc-toolbar-title { font-size: 1.3rem; font-weight: 700; color: #005088; }
+        .fc .fc-button-primary { background-color: #005088; border-color: #005088; border-radius: 6px; text-transform: capitalize; font-weight: 500; }
+        .fc .fc-button-primary:hover { background-color: #003d6a; border-color: #003d6a; }
+        .fc .fc-button-primary:not(:disabled).fc-button-active,
+        .fc .fc-button-primary:not(:disabled):active { background-color: #002c4c; border-color: #002c4c; }
+        
+        .fc-event { 
+            border-radius: 4px; 
+            border: none; 
+            padding: 2px 4px; 
+            font-size: 0.65rem; 
+            font-weight: 500; 
+            cursor: pointer; 
+            transition: transform 0.1s; 
+            margin-bottom: 2px !important; 
+            line-height: 1.2;
+        }
+        .fc-event:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .fc-daygrid-day-number { color: #1e293b; font-weight: 500; padding: 6px; font-size: 0.8rem; }
+        .fc-col-header-cell-cushion { color: #005088; font-weight: 700; padding: 10px 0; font-size: 0.85rem; }
+        .fc-daygrid-more-link { background-color: #e0f2fe !important; color: #0369a1 !important; border-radius: 6px !important; padding: 2px 6px !important; font-size: 0.7rem !important; font-weight: 700 !important; display: inline-block; margin-top: 2px; transition: background-color 0.2s; }
+        .fc-daygrid-more-link:hover { background-color: #bae6fd !important; text-decoration: none !important; }
+        .modal-overlay { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .toast-enter { animation: slideUp 0.3s ease-out forwards; }
+
+        @media (min-width: 768px) {
+            .fc {
+                padding: 20px;
+            }
+            .fc .fc-toolbar-title { font-size: 1.5rem; }
+        }
+
+        /* 📱 초소형 모바일 화면 캘린더 세부 최적화 */
+        @media (max-width: 640px) {
+            .fc .fc-toolbar-title { font-size: 1.1rem !important; }
+            .fc .fc-button { padding: 4px 6px !important; font-size: 0.75rem !important; }
+            .fc-col-header-cell-cushion { padding: 4px 0 !important; font-size: 0.75rem !important; }
+            .fc-daygrid-day-number { padding: 3px !important; font-size: 0.7rem !important; }
+            .fc-event { font-size: 0.55rem !important; padding: 1px 2px !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col">
+
+    <!-- [개편 완료] 요청하신대로 각 항목들을 한 줄씩 깔끔하게 구분한 모바일 안심 헤더 구조 -->
+    <header class="bg-primary text-white shadow-md p-4 flex flex-col gap-3.5 z-10 shrink-0">
+        
+        <!-- 1열: 대시보드 타이틀 정보 -->
+        <div class="flex items-center gap-2.5">
+            <i class="fa-solid fa-calendar-check text-xl md:text-2xl text-secondary"></i>
+            <h1 class="text-base md:text-xl font-bold tracking-tight">교육 일정 관리 대시보드</h1>
+        </div>
+
+        <!-- 2열: 거점 필터 단독 배치 ('기타' 옵션 추가) -->
+        <div class="flex items-center gap-2.5 bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+            <label for="locationFilter" class="text-xs md:text-sm font-semibold text-slate-200 shrink-0 flex items-center gap-1.5">
+                <i class="fa-solid fa-filter text-secondary"></i> 거점 필터:
+            </label>
+            <select id="locationFilter" onchange="applyLocationFilter()" class="flex-grow bg-slate-800 text-white border border-white/20 rounded-lg px-2 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer">
+                <option value="all" class="text-slate-800">전체보기</option>
+                <option value="과천" class="text-slate-800">과천(3층 대강당)</option>
+                <option value="마곡" class="text-slate-800">마곡(2층 다목적홀)</option>
+                <option value="구미" class="text-slate-800">구미(위캔두 2층 연수실 2)</option>
+                <option value="용인" class="text-slate-800">용인(3층 중연수실)</option>
+                <option value="기타" class="text-slate-800">기타</option>
+            </select>
+        </div>
+
+        <!-- 3열: 연동 상태 배지 + 새 일정 등록 버튼 배치 -->
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <div id="sync-status" class="text-[11px] md:text-xs text-secondary bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> 시트 연동 대기중
+                </div>
+                <button id="troubleshootBtn" onclick="openModal('errorModal')" class="hidden bg-red-500/20 text-red-100 hover:bg-red-500/40 px-2 py-1.5 rounded-full text-xs font-medium transition-colors border border-red-400/50">
+                    <i class="fa-solid fa-circle-question"></i> 해결방법
+                </button>
+            </div>
+            
+            <button onclick="openEditModal()" class="bg-secondary hover:bg-teal-500 text-white px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-colors shadow-md flex items-center gap-1.5">
+                <i class="fa-solid fa-plus text-[10px]"></i> 새 일정 등록
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow p-3 md:p-6 overflow-hidden flex flex-col">
+        <div id="calendar" class="w-full h-full"></div>
+    </main>
+
+    <!-- View Event Modal -->
+    <div id="viewModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300 h-max max-h-[90vh] flex flex-col" id="viewModalContent">
+            <!-- Modal Header -->
+            <div class="bg-primary px-6 py-4 flex justify-between items-center text-white relative shrink-0">
+                <div class="absolute top-0 left-0 w-full h-1" id="viewModalColorBar"></div>
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <span id="viewTypeBadge" class="px-2 py-1 text-xs rounded bg-white/20">교육</span>
+                    <span id="viewTitle"></span>
+                </h2>
+                <button onclick="closeModal('viewModal')" class="text-white/70 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto flex-grow custom-scrollbar">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="flex items-start gap-3">
+                        <div class="bg-slate-100 p-2 rounded-lg text-primary"><i class="fa-regular fa-clock w-5 text-center"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">일정</p>
+                            <p class="text-sm font-bold" id="viewDates"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="bg-slate-100 p-2 rounded-lg text-primary"><i class="fa-solid fa-location-dot w-5 text-center"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">거점</p>
+                            <p class="text-sm font-bold" id="viewLocation"></p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 col-span-2">
+                        <div class="bg-slate-100 p-2 rounded-lg text-primary"><i class="fa-solid fa-users w-5 text-center"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">입과인원</p>
+                            <p class="text-sm font-bold" id="viewAttendees"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 메모 영역 -->
+                <div class="mb-6 bg-amber-50 p-4 rounded-xl border border-amber-100">
+                    <p class="text-xs text-amber-700 font-bold mb-1 flex items-center gap-1">
+                        <i class="fa-regular fa-note-sticky"></i> 메모 / 특이사항
+                    </p>
+                    <p class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed animate-fade-in" id="viewMemo"></p>
+                </div>
+
+                <hr class="border-slate-100 mb-6">
+
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">담당자 연락망</h3>
+                    
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-200 text-primary flex items-center justify-center font-bold text-lg">강</div>
+                            <div>
+                                <p class="text-xs text-primary font-medium mb-0.5">강사</p>
+                                <p class="text-sm font-bold text-slate-800" id="viewInstructorName"></p>
+                            </div>
+                        </div>
+                        <a href="#" id="viewInstructorPhoneBtn" class="flex items-center gap-2 bg-white text-primary border border-blue-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors">
+                            <i class="fa-solid fa-phone text-xs"></i> <span id="viewInstructorPhone"></span>
+                        </a>
+                    </div>
+
+                    <div class="bg-teal-50 border border-teal-100 rounded-xl p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-teal-200 text-teal-800 flex items-center justify-center font-bold text-lg">운</div>
+                            <div>
+                                <p class="text-xs text-teal-700 font-medium mb-0.5">운영자</p>
+                                <p class="text-sm font-bold text-slate-800" id="viewManagerName"></p>
+                            </div>
+                        </div>
+                        <a href="#" id="viewManagerPhoneBtn" class="flex items-center gap-2 bg-white text-teal-700 border border-teal-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-teal-100 transition-colors">
+                            <i class="fa-solid fa-phone text-xs"></i> <span id="viewManagerPhone"></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 px-6 py-4 flex justify-between items-center border-t border-slate-200 shrink-0">
+                <button onclick="confirmDelete()" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                    <i class="fa-regular fa-trash-can mr-1"></i> 삭제
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeModal('viewModal')" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-100 text-sm font-medium transition-colors">닫기</button>
+                    <button onclick="openEditFromView()" class="bg-primary hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                        <i class="fa-solid fa-pen mr-1"></i> 수정하기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Event Modal -->
+    <div id="editModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform scale-95 transition-transform duration-300 h-max max-h-[90vh] flex flex-col" id="editModalContent">
+            
+            <div class="bg-primary px-6 py-4 flex justify-between items-center text-white shrink-0">
+                <h2 class="text-xl font-bold" id="editModalTitle">일정 추가</h2>
+                <button onclick="closeModal('editModal')" class="text-white/70 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-grow custom-scrollbar">
+                <form id="eventForm" class="space-y-5">
+                    <input type="hidden" id="eventId">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">일정 구분 *</label>
+                            <!-- [요청사항 반영] 워크숍 옵션 추가 -->
+                            <select id="eventType" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                <option value="교육">교육 (본 과정)</option>
+                                <option value="세팅">세팅 (사전 준비)</option>
+                                <option value="워크숍">워크숍</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">거점 *</label>
+                            <!-- [요청사항 반영] '기타' 옵션 추가 -->
+                            <select id="eventLocation" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                <option value="" disabled selected>거점을 선택하세요</option>
+                                <option value="과천(3층 대강당)">과천(3층 대강당)</option>
+                                <option value="마곡(2층 다목적홀)">마곡(2층 다목적홀)</option>
+                                <option value="구미(위캔두 2층 연수실 2)">구미(위캔두 2층 연수실 2)</option>
+                                <option value="용인(3층 중연수실)">용인(3층 중연수실)</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">과정명 *</label>
+                            <input type="text" id="eventCourse" placeholder="예: 신입사원 온보딩" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">차수</label>
+                            <input type="text" id="eventSession" placeholder="예: 1차" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">시작일 *</label>
+                            <input type="date" id="eventStartDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">종료일 *</label>
+                            <input type="date" id="eventEndDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">입과 인원</label>
+                        <input type="number" id="eventAttendees" placeholder="숫자만 입력" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    </div>
+
+                    <hr class="border-slate-200">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">강사명</label>
+                            <input type="text" id="eventInstName" placeholder="강사 이름" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">강사 연락처</label>
+                            <input type="text" id="eventInstPhone" placeholder="010-0000-0000" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-teal-50/50 p-4 rounded-xl border border-teal-100">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">운영자명</label>
+                            <input type="text" id="eventMgrName" placeholder="운영자 이름" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">운영자 연락처</label>
+                            <input type="text" id="eventMgrPhone" placeholder="010-0000-0000" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <!-- 메모 입력 영역 -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">메모 (선택)</label>
+                        <textarea id="eventMemo" rows="3" placeholder="준비물, 특이사항 등 전달할 메모를 입력하세요" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"></textarea>
+                    </div>
+
+                </form>
+            </div>
+            
+            <div class="bg-slate-50 px-6 py-4 flex justify-end gap-2 border-t border-slate-200 shrink-0">
+                <button onclick="closeModal('editModal')" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-100 font-medium transition-colors">취소</button>
+                <button onclick="saveEvent()" class="bg-primary hover:bg-blue-800 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm">
+                    저장 및 동기화
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirmModal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm text-center transform scale-95 transition-transform duration-200" id="confirmModalContent">
+            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">일정 삭제</h3>
+            <p class="text-sm text-slate-500 mb-6">정말로 이 일정을 삭제하시겠습니까?<br>삭제된 데이터는 복구할 수 없습니다.</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-100 font-medium transition-colors w-1/2">취소</button>
+                <button onclick="executeDelete()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors w-1/2 shadow-sm">삭제하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Troubleshooting Error Modal -->
+    <div id="errorModal" class="modal-overlay fixed inset-0 z-[80] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300" id="errorModalContent">
+            <div class="bg-red-500 px-6 py-4 flex justify-between items-center text-white">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> 시트 연동 오류 해결 방법
+                </h2>
+                <button onclick="closeModal('errorModal')" class="text-white/70 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 text-slate-700 space-y-4 text-sm max-h-[70vh] overflow-y-auto">
+                <p class="font-bold text-red-600 mb-2">구글 시트와 통신이 원활하지 않아 임시 데이터를 보여주고 있습니다. 아래 3가지를 꼭 확인해주세요!</p>
+                
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-1 text-base">1. 시트 안에서 스크립트를 열지 않은 경우</h3>
+                    <p class="mt-1"><b>데이터를 저장할 구글 스프레드시트를 먼저 여신 후, 상단 메뉴의 [확장 프로그램] > [Apps Script]</b>를 통해 코드를 작성해야 합니다.</p>
+                </div>
+                
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-1 text-base">2. 시트 헤더가 없거나, 코드를 실행하지 않은 경우</h3>
+                    <p class="mt-1">Apps Script 에디터에서 함수를 <code>setup</code>으로 맞추고 <b>[실행]</b> 버튼을 꼭 한 번 눌러주세요.</p>
+                </div>
+                
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-1 text-base">3. 회사/학교 계정의 보안 정책</h3>
+                    <p class="mt-1">조직 계정의 경우 외부 통신이 막혀있을 수 있습니다. 개인 Gmail 계정으로 시트를 만들어 테스트해보세요.</p>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 flex justify-end border-t border-slate-200">
+                <button onclick="closeModal('errorModal')" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm">
+                    확인 및 닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-[70] flex flex-col gap-3"></div>
+
+    <script>
+        // [중요] 실제 Apps Script 배포 URL로 교체해서 테스트하세요.
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJZLSkUjlwZktqRSUz7_ms3tNt6jgnco5lbujhN0qd3BWDFyllDo5tNQbTN4AMnhaD/exec';
+        
+        let calendar;
+        let currentEditingId = null;
+        let eventToDeleteId = null;
+        let eventsData = [];
+
+        // 로컬 테스트용 임시 데이터
+        const mockData = [
+            { id: 'ev_1', type: '교육', startDate: '2026-06-20', endDate: '2026-06-22', location: '과천(3층 대강당)', courseName: '신입사원 온보딩', session: '1차', instructorName: '김강사', instructorPhone: '010-1234-5678', managerName: '이운영', managerPhone: '010-9876-5432', attendees: '30', memo: '마이크 2대 추가 세팅 필요\n다과상 앞쪽에 배치 요망' },
+            { id: 'ev_2', type: '세팅', startDate: '2026-06-25', endDate: '2026-06-25', location: '마곡(2층 다목적홀)', courseName: '리더십 과정', session: '2차', instructorName: '박강사', instructorPhone: '010-1111-2222', managerName: '최운영', managerPhone: '010-3333-4444', attendees: '0', memo: '' },
+            { id: 'ev_3', type: '교육', startDate: '2026-06-26', endDate: '2026-06-28', location: '마곡(2층 다목적홀)', courseName: '리더십 과정', session: '2차', instructorName: '박강사', instructorPhone: '010-1111-2222', managerName: '최운영', managerPhone: '010-3333-4444', attendees: '25', memo: '본부장님 격려사 예정 (오전 10시)' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'ko',
+                headerToolbar: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: ''
+                },
+                // [요청사항 반영] 거점 필터링 결과 반영
+                events: function(info, successCallback, failureCallback) {
+                    const filterValue = document.getElementById('locationFilter').value;
+                    
+                    const filteredData = eventsData.filter(e => {
+                        if (filterValue === 'all') return true;
+                        return e.location && e.location.includes(filterValue);
+                    });
+
+                    const fcEvents = filteredData.map(e => {
+                        let endDateObj = new Date(e.endDate);
+                        endDateObj.setDate(endDateObj.getDate() + 1);
+                        let fcEndDate = endDateObj.toISOString().split('T')[0];
+
+                        // 안전하게 타입 매칭
+                        let safeType = e.type ? e.type.trim() : '';
+                        let isEdu = !safeType.includes('세팅'); 
+                        
+                        // [요청사항 반영] 교육(청색), 세팅(청록색), 워크숍(보라색) 색상 가변 매핑
+                        let color = '#005088'; // 기본 교육
+                        if (safeType === '세팅') color = '#11caa0';
+                        else if (safeType === '워크숍') color = '#8b5cf6';
+                        
+                        // 달력에는 거점 이름 중 괄호 앞 부분만 짧게 표기
+                        let shortLocation = e.location ? e.location.split('(')[0] : '';
+
+                        // 일정 타이틀 생성
+                        let displayType = safeType || '교육';
+                        let eventTitle = `[${displayType}] ${shortLocation} ${e.session}`;
+                        if (displayType !== '세팅' && e.courseName) {
+                            eventTitle = `[${displayType}] ${e.courseName} ${shortLocation} ${e.session}`;
+                        }
+
+                        return {
+                            id: e.id,
+                            title: eventTitle,
+                            start: e.startDate,
+                            end: e.startDate === e.endDate ? e.startDate : fcEndDate,
+                            allDay: true,
+                            backgroundColor: color,
+                            borderColor: color,
+                            textColor: '#ffffff',
+                            extendedProps: { ...e }
+                        };
+                    });
+                    successCallback(fcEvents);
+                },
+                eventClick: function(info) {
+                    const eventData = {
+                        id: info.event.id,
+                        title: info.event.title,
+                        ...info.event.extendedProps
+                    };
+                    openViewModal(eventData);
+                },
+                height: '100%',
+                dayMaxEvents: 3
+            });
+            
+            calendar.render();
+            fetchDataFromServer();
+        });
+
+        function applyLocationFilter() {
+            if (calendar) {
+                calendar.refetchEvents();
+            }
+        }
+
+        // 날짜 객체 안전 파싱 유틸리티
+        function formatDateString(dateVal) {
+            if (!dateVal) return '';
+            if (typeof dateVal === 'string') return dateVal.split('T')[0];
+            try {
+                let d = new Date(dateVal);
+                if (isNaN(d.getTime())) return String(dateVal);
+                let y = d.getFullYear();
+                let m = String(d.getMonth() + 1).padStart(2, '0');
+                let day = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
+            } catch(err) {
+                return String(dateVal);
+            }
+        }
+
+        function fetchDataFromServer() {
+            const statusEl = document.getElementById('sync-status');
+            const troubleshootBtn = document.getElementById('troubleshootBtn');
+            statusEl.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin text-blue-500"></i> 데이터 호출 중...';
+            
+            fetch(SCRIPT_URL + '?api=get')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if(data.error) throw new Error(data.error);
+                    
+                    eventsData = data.map((e, index) => {
+                        const id = e.id || e.ID || '';
+                        const type = e.type || e['일정구분'] || '';
+                        const startDate = e.startDate || e['시작일'] || '';
+                        const endDate = e.endDate || e['종료일'] || '';
+                        const location = e.location || e['거점'] || '';
+                        const courseName = e.courseName || e['과정명'] || '';
+                        const session = e.session || e['차수'] || '';
+                        const instructorName = e.instructorName || e['강사명'] || '';
+                        const instructorPhone = e.instructorPhone || e['강사연락처'] || '';
+                        const managerName = e.managerName || e['운영자'] || '';
+                        const managerPhone = e.managerPhone || e['운영자연락처'] || '';
+                        const attendees = e.attendees || e['입과인원'] || '0';
+                        const memo = e.memo || e['메모'] || '';
+
+                        return {
+                            id: id ? String(id) : 'ev_auto_' + Date.now() + '_' + index,
+                            type: String(type).trim(),
+                            startDate: formatDateString(startDate),
+                            endDate: formatDateString(endDate),
+                            location: String(location).trim(),
+                            courseName: String(courseName).trim(),
+                            session: String(session).trim(),
+                            instructorName: String(instructorName).trim(),
+                            instructorPhone: String(instructorPhone).trim(),
+                            managerName: String(managerName).trim(),
+                            managerPhone: String(managerPhone).trim(),
+                            attendees: String(attendees).trim(),
+                            memo: String(memo).trim()
+                        };
+                    });
+
+                    calendar.refetchEvents();
+                    statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-400"></i> 동기화 완료';
+                    showToast('구글 시트에서 데이터를 성공적으로 불러왔습니다.', 'success');
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> 연동 오류 (임시 데이터)';
+                    showToast('시트 연결에 실패하여 임시 데이터를 불러옵니다.', 'error');
+                    
+                    troubleshootBtn.classList.remove('hidden');
+
+                    eventsData = [...mockData];
+                    calendar.refetchEvents();
+                });
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = document.getElementById(modalId + 'Content');
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = document.getElementById(modalId + 'Content');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function openViewModal(eventData) {
+            currentEditingId = eventData.id;
+            
+            let safeType = eventData.type ? eventData.type.trim() : '';
+            let displayType = safeType || '교육';
+
+            // [요청사항 반영] 일정 구분에 따른 테마 컬러 바 스타일 가변 적용
+            let barColor = 'bg-blue-400';
+            let badgeStyle = 'bg-blue-800 text-blue-100';
+            if (safeType === '세팅') {
+                barColor = 'bg-teal-400';
+                badgeStyle = 'bg-teal-700 text-teal-50';
+            } else if (safeType === '워크숍') {
+                barColor = 'bg-purple-400';
+                badgeStyle = 'bg-purple-700 text-purple-50';
+            }
+
+            document.getElementById('viewModalColorBar').className = `absolute top-0 left-0 w-full h-1 ${barColor}`;
+            const badge = document.getElementById('viewTypeBadge');
+            badge.textContent = displayType;
+            badge.className = `px-2 py-1 text-xs rounded font-bold ${badgeStyle}`;
+            document.getElementById('viewTitle').textContent = `${eventData.courseName} ${eventData.session && eventData.session !== '-' ? `(${eventData.session})` : ''}`;
+            
+            const dateStr = eventData.startDate === eventData.endDate ? eventData.startDate.replace(/-/g, '.') : `${eventData.startDate.replace(/-/g, '.')} - ${eventData.endDate.replace(/-/g, '.')}`;
+            document.getElementById('viewDates').textContent = dateStr;
+            document.getElementById('viewLocation').textContent = eventData.location || '-';
+            document.getElementById('viewAttendees').textContent = eventData.attendees && eventData.attendees !== '0' ? `${eventData.attendees}명` : '-';
+            
+            const memoEl = document.getElementById('viewMemo');
+            if (eventData.memo && eventData.memo.trim() !== "") {
+                memoEl.textContent = eventData.memo;
+                memoEl.classList.remove('text-slate-400', 'italic');
+                memoEl.classList.add('text-slate-700');
+            } else {
+                memoEl.textContent = '등록된 메모나 특이사항이 없습니다.';
+                memoEl.classList.add('text-slate-400', 'italic');
+                memoEl.classList.remove('text-slate-700');
+            }
+
+            document.getElementById('viewInstructorName').textContent = eventData.instructorName || '미정';
+            const instPhone = eventData.instructorPhone || '연락처 없음';
+            document.getElementById('viewInstructorPhone').textContent = instPhone;
+            document.getElementById('viewInstructorPhoneBtn').href = instPhone !== '연락처 없음' && instPhone !== '-' ? `tel:${instPhone}` : '#';
+            document.getElementById('viewManagerName').textContent = eventData.managerName || '미정';
+            const mgrPhone = eventData.managerPhone || '연락처 없음';
+            document.getElementById('viewManagerPhone').textContent = mgrPhone;
+            document.getElementById('viewManagerPhoneBtn').href = mgrPhone !== '연락처 없음' && mgrPhone !== '-' ? `tel:${mgrPhone}` : '#';
+            
+            openModal('viewModal');
+        }
+
+        function openEditModal(isEdit = false) {
+            const form = document.getElementById('eventForm');
+            const title = document.getElementById('editModalTitle');
+            if (!isEdit) {
+                form.reset();
+                document.getElementById('eventId').value = '';
+                currentEditingId = null;
+                title.textContent = '새 일정 등록';
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('eventStartDate').value = today;
+                document.getElementById('eventEndDate').value = today;
+            } else {
+                title.textContent = '일정 수정';
+                const ev = eventsData.find(e => e.id === currentEditingId);
+                if(ev) {
+                    document.getElementById('eventId').value = ev.id;
+                    
+                    let safeType = ev.type ? ev.type.trim() : '';
+                    if (!['교육', '세팅', '워크숍'].includes(safeType)) {
+                        safeType = safeType.includes('세팅') ? '세팅' : '교육';
+                    }
+                    
+                    let typeSelect = document.getElementById('eventType');
+                    typeSelect.value = safeType;
+                    if (!typeSelect.value) typeSelect.value = '교육';
+
+                    let locSelect = document.getElementById('eventLocation');
+                    let safeLoc = ev.location ? ev.location.trim() : '';
+                    let matchedOpt = Array.from(locSelect.options).find(opt => opt.value !== "" && (opt.value.includes(safeLoc) || safeLoc.includes(opt.value.split('(')[0])));
+                    
+                    if (matchedOpt) {
+                        locSelect.value = matchedOpt.value;
+                    } else if (safeLoc) {
+                        locSelect.add(new Option(safeLoc, safeLoc));
+                        locSelect.value = safeLoc;
+                    } else {
+                        locSelect.value = "";
+                    }
+
+                    document.getElementById('eventCourse').value = ev.courseName || '';
+                    document.getElementById('eventSession').value = ev.session || '';
+                    document.getElementById('eventStartDate').value = ev.startDate || '';
+                    document.getElementById('eventEndDate').value = ev.endDate || '';
+                    document.getElementById('eventAttendees').value = ev.attendees || '0';
+                    document.getElementById('eventInstName').value = ev.instructorName || '';
+                    document.getElementById('eventInstPhone').value = ev.instructorPhone || '';
+                    document.getElementById('eventMgrName').value = ev.managerName || '';
+                    document.getElementById('eventMgrPhone').value = ev.managerPhone || '';
+                    document.getElementById('eventMemo').value = ev.memo || ''; 
+                }
+            }
+            openModal('editModal');
+        }
+
+        function openEditFromView() {
+            closeModal('viewModal');
+            setTimeout(() => { openEditModal(true); }, 300);
+        }
+
+        function saveEvent() {
+            const form = document.getElementById('eventForm');
+            if(!form.checkValidity()) { form.reportValidity(); return; }
+
+            const newEvent = {
+                id: document.getElementById('eventId').value || 'ev_' + Date.now(),
+                type: document.getElementById('eventType').value,
+                location: document.getElementById('eventLocation').value,
+                courseName: document.getElementById('eventCourse').value,
+                session: document.getElementById('eventSession').value,
+                startDate: document.getElementById('eventStartDate').value,
+                endDate: document.getElementById('eventEndDate').value,
+                attendees: document.getElementById('eventAttendees').value || '0',
+                instructorName: document.getElementById('eventInstName').value,
+                instructorPhone: document.getElementById('eventInstPhone').value,
+                managerName: document.getElementById('eventMgrName').value,
+                managerPhone: document.getElementById('eventMgrPhone').value,
+                memo: document.getElementById('eventMemo').value
+            };
+
+            if (document.getElementById('eventId').value) {
+                const index = eventsData.findIndex(e => e.id === newEvent.id);
+                if (index !== -1) eventsData[index] = newEvent;
+            } else {
+                eventsData.push(newEvent);
+            }
+
+            closeModal('editModal');
+            calendar.refetchEvents();
+            syncToServer('데이터가 반영되었습니다.');
+        }
+
+        function confirmDelete() {
+            eventToDeleteId = currentEditingId;
+            closeModal('viewModal');
+            setTimeout(() => {
+                const modal = document.getElementById('confirmModal');
+                const content = document.getElementById('confirmModalContent');
+                modal.classList.remove('hidden');
+                void modal.offsetWidth;
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 300);
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            const content = document.getElementById('confirmModalContent');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                eventToDeleteId = null;
+            }, 200);
+        }
+
+        function executeDelete() {
+            if(eventToDeleteId) {
+                eventsData = eventsData.filter(e => e.id !== eventToDeleteId);
+                calendar.refetchEvents();
+                closeConfirmModal();
+                syncToServer('일정이 성공적으로 삭제되었습니다.');
+            }
+        }
+
+        function syncToServer(successMessage) {
+            const statusEl = document.getElementById('sync-status');
+            statusEl.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin text-blue-500"></i> 동기화 중...';
+            
+            const params = new URLSearchParams();
+            params.append('api', 'save');
+            params.append('data', JSON.stringify(eventsData));
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: params
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(result => {
+                if(result.success) {
+                    statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-400"></i> 동기화 완료';
+                    showToast(successMessage, 'success');
+                } else {
+                    throw new Error('Save Failed: ' + result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Save Error:', error);
+                statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> 저장 실패 (임시 데이터)';
+                showToast('구글 시트 저장에 실패했습니다.', 'error');
+            });
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const colors = { success: 'bg-slate-800 text-white border-l-4 border-green-500', info: 'bg-slate-800 text-white border-l-4 border-blue-500', error: 'bg-red-100 text-red-800 border-l-4 border-red-500' };
+            const icons = { success: '<i class="fa-solid fa-circle-check text-green-400"></i>', info: '<i class="fa-solid fa-circle-info text-blue-400"></i>', error: '<i class="fa-solid fa-triangle-exclamation text-red-500"></i>' };
+            
+            toast.className = `${colors[type]} px-4 py-3 rounded shadow-lg flex items-center gap-3 toast-enter min-w-[300px] font-medium text-sm`;
+            toast.innerHTML = `${icons[type]} <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(100%)';
+                toast.style.transition = 'all 0.3s ease-in';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
