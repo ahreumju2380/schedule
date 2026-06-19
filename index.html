@@ -54,30 +54,30 @@
             height: 100%;
         }
         
-        .fc .fc-toolbar-title { font-size: 1.5rem; font-weight: 700; color: #005088; }
+        .fc .fc-toolbar-title { font-size: 1.3rem; font-weight: 700; color: #005088; }
         .fc .fc-button-primary { background-color: #005088; border-color: #005088; border-radius: 6px; text-transform: capitalize; font-weight: 500; }
         .fc .fc-button-primary:hover { background-color: #003d6a; border-color: #003d6a; }
         .fc .fc-button-primary:not(:disabled).fc-button-active,
         .fc .fc-button-primary:not(:disabled):active { background-color: #002c4c; border-color: #002c4c; }
         
-        /* [요청사항 반영] 달력 일정 바를 가늘게, 텍스트는 작게 설정 */
         .fc-event { 
             border-radius: 4px; 
             border: none; 
-            padding: 1px 4px; 
+            padding: 2px 4px; 
             font-size: 0.65rem; 
             font-weight: 500; 
             cursor: pointer; 
             transition: transform 0.1s; 
-            margin-bottom: 1px !important; 
+            margin-bottom: 2px !important; 
             line-height: 1.2;
         }
         .fc-event:hover { transform: scale(1.02); filter: brightness(1.1); }
-        .fc-daygrid-day-number { color: #1e293b; font-weight: 500; padding: 8px; font-size: 0.85rem; }
-        .fc-col-header-cell-cushion { color: #005088; font-weight: 700; padding: 12px 0; font-size: 0.95rem; }
-        .fc-daygrid-more-link { background-color: #e0f2fe !important; color: #0369a1 !important; border-radius: 6px !important; padding: 2px 8px !important; font-size: 0.75rem !important; font-weight: 700 !important; display: inline-block; margin-top: 4px; margin-left: 4px; transition: background-color 0.2s; }
+        .fc-daygrid-day-number { color: #1e293b; font-weight: 500; padding: 6px; font-size: 0.8rem; }
+        .fc-col-header-cell-cushion { color: #005088; font-weight: 700; padding: 10px 0; font-size: 0.85rem; }
+        .fc-daygrid-more-link { background-color: #e0f2fe !important; color: #0369a1 !important; border-radius: 6px !important; padding: 2px 6px !important; font-size: 0.7rem !important; font-weight: 700 !important; display: inline-block; margin-top: 2px; transition: background-color 0.2s; }
         .fc-daygrid-more-link:hover { background-color: #bae6fd !important; text-decoration: none !important; }
         .modal-overlay { background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -85,65 +85,62 @@
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .toast-enter { animation: slideUp 0.3s ease-out forwards; }
 
-        /* PC 버전 패딩 및 여백 정의 */
         @media (min-width: 768px) {
             .fc {
                 padding: 20px;
             }
+            .fc .fc-toolbar-title { font-size: 1.5rem; }
         }
 
-        /* 📱 초소형 기기 및 모바일 화면 전용 캘린더 미세 스타일 조정 */
+        /* 📱 초소형 모바일 화면 캘린더 세부 최적화 */
         @media (max-width: 640px) {
-            .fc .fc-toolbar-title { font-size: 1.15rem !important; }
-            .fc .fc-button { padding: 4px 8px !important; font-size: 0.8rem !important; }
-            .fc-col-header-cell-cushion { padding: 6px 0 !important; font-size: 0.8rem !important; }
-            .fc-daygrid-day-number { padding: 4px !important; font-size: 0.75rem !important; }
-            .fc-event { font-size: 0.55rem !important; padding: 0.5px 2px !important; }
+            .fc .fc-toolbar-title { font-size: 1.1rem !important; }
+            .fc .fc-button { padding: 4px 6px !important; font-size: 0.75rem !important; }
+            .fc-col-header-cell-cushion { padding: 4px 0 !important; font-size: 0.75rem !important; }
+            .fc-daygrid-day-number { padding: 3px !important; font-size: 0.7rem !important; }
+            .fc-event { font-size: 0.55rem !important; padding: 1px 2px !important; }
         }
     </style>
 </head>
 <body class="text-slate-800 h-screen overflow-hidden flex flex-col">
 
-    <!-- [반응형 수정] 헤더를 모바일에서는 세로(flex-col), PC에서는 가로(flex-row) 레이아웃으로 변경 -->
-    <header class="bg-primary text-white shadow-md p-3 md:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 md:gap-4 z-10 shrink-0">
-        <!-- 타이틀 구역 및 모바일 전용 등록 버튼 -->
-        <div class="flex items-center justify-between md:justify-start gap-3">
-            <div class="flex items-center gap-2 md:gap-3">
-                <i class="fa-solid fa-calendar-check text-xl md:text-2xl text-secondary"></i>
-                <h1 class="text-base md:text-xl font-bold tracking-tight whitespace-nowrap">교육 일정 관리 대시보드</h1>
-            </div>
-            <!-- 모바일 전용 일정 등록 버튼 (PC 미노출) -->
-            <button onclick="openEditModal()" class="md:hidden bg-secondary hover:bg-teal-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-1">
-                <i class="fa-solid fa-plus text-[10px]"></i> 등록
-            </button>
+    <!-- [개편 완료] 요청하신대로 각 항목들을 한 줄씩 깔끔하게 구분한 모바일 안심 헤더 구조 -->
+    <header class="bg-primary text-white shadow-md p-4 flex flex-col gap-3.5 z-10 shrink-0">
+        
+        <!-- 1열: 대시보드 타이틀 정보 -->
+        <div class="flex items-center gap-2.5">
+            <i class="fa-solid fa-calendar-check text-xl md:text-2xl text-secondary"></i>
+            <h1 class="text-base md:text-xl font-bold tracking-tight">교육 일정 관리 대시보드</h1>
         </div>
 
-        <!-- 컨트롤 영역: 필터 및 동기화 상태 -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-4 flex-grow md:flex-grow-0 justify-end">
-            <!-- [요청사항 반영] 거점별 필터 드롭다운 디자인 개선 -->
-            <div class="flex items-center gap-2 flex-grow sm:flex-grow-0">
-                <label for="locationFilter" class="text-xs md:text-sm font-medium text-slate-200 shrink-0"><i class="fa-solid fa-filter"></i> 거점 필터:</label>
-                <select id="locationFilter" onchange="applyLocationFilter()" class="w-full sm:w-auto bg-white/10 text-white border border-white/20 rounded-lg px-2.5 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer">
-                    <option value="all" class="text-slate-800">전체보기</option>
-                    <option value="과천" class="text-slate-800">과천(3층 대강당)</option>
-                    <option value="마곡" class="text-slate-800">마곡(2층 다목적홀)</option>
-                    <option value="구미" class="text-slate-800">구미(위캔두 2층 연수실 2)</option>
-                    <option value="용인" class="text-slate-800">용인(3층 중연수실)</option>
-                </select>
-            </div>
-            
-            <div class="flex items-center justify-between sm:justify-end gap-2">
-                <div id="sync-status" class="text-xs md:text-sm text-secondary bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-1.5 justify-center flex-grow sm:flex-grow-0">
+        <!-- 2열: 거점 필터 단독 배치 -->
+        <div class="flex items-center gap-2.5 bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+            <label for="locationFilter" class="text-xs md:text-sm font-semibold text-slate-200 shrink-0 flex items-center gap-1.5">
+                <i class="fa-solid fa-filter text-secondary"></i> 거점 필터:
+            </label>
+            <select id="locationFilter" onchange="applyLocationFilter()" class="flex-grow bg-slate-800 text-white border border-white/20 rounded-lg px-2 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer">
+                <option value="all" class="text-slate-800">전체보기</option>
+                <option value="과천" class="text-slate-800">과천(3층 대강당)</option>
+                <option value="마곡" class="text-slate-800">마곡(2층 다목적홀)</option>
+                <option value="구미" class="text-slate-800">구미(위캔두 2층 연수실 2)</option>
+                <option value="용인" class="text-slate-800">용인(3층 중연수실)</option>
+            </select>
+        </div>
+
+        <!-- 3열: 연동 상태 배지 + 새 일정 등록 버튼 배치 -->
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <div id="sync-status" class="text-[11px] md:text-xs text-secondary bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-1.5">
                     <i class="fa-solid fa-cloud-arrow-up"></i> 시트 연동 대기중
                 </div>
-                <button id="troubleshootBtn" onclick="openModal('errorModal')" class="hidden bg-red-500/20 text-red-100 hover:bg-red-500/40 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border border-red-400/50 shrink-0">
+                <button id="troubleshootBtn" onclick="openModal('errorModal')" class="hidden bg-red-500/20 text-red-100 hover:bg-red-500/40 px-2 py-1.5 rounded-full text-xs font-medium transition-colors border border-red-400/50">
                     <i class="fa-solid fa-circle-question"></i> 해결방법
                 </button>
-                <!-- PC 전용 일정 등록 버튼 (모바일 미노출) -->
-                <button onclick="openEditModal()" class="hidden md:flex bg-secondary hover:bg-teal-500 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm items-center gap-2 text-sm shrink-0">
-                    <i class="fa-solid fa-plus"></i> 새 일정 등록
-                </button>
             </div>
+            
+            <button onclick="openEditModal()" class="bg-secondary hover:bg-teal-500 text-white px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-colors shadow-md flex items-center gap-1.5">
+                <i class="fa-solid fa-plus text-[10px]"></i> 새 일정 등록
+            </button>
         </div>
     </header>
 
@@ -183,7 +180,7 @@
                             <p class="text-sm font-bold" id="viewLocation"></p>
                         </div>
                     </div>
-                    <div class="flex items-start gap-3">
+                    <div class="flex items-start gap-3 col-span-2">
                         <div class="bg-slate-100 p-2 rounded-lg text-primary"><i class="fa-solid fa-users w-5 text-center"></i></div>
                         <div>
                             <p class="text-xs text-slate-500 font-medium">입과인원</p>
@@ -197,7 +194,7 @@
                     <p class="text-xs text-amber-700 font-bold mb-1 flex items-center gap-1">
                         <i class="fa-regular fa-note-sticky"></i> 메모 / 특이사항
                     </p>
-                    <p class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed" id="viewMemo"></p>
+                    <p class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed animate-fade-in" id="viewMemo"></p>
                 </div>
 
                 <hr class="border-slate-100 mb-6">
@@ -213,8 +210,8 @@
                                 <p class="text-sm font-bold text-slate-800" id="viewInstructorName"></p>
                             </div>
                         </div>
-                        <a href="#" id="viewInstructorPhoneBtn" class="flex items-center gap-2 bg-white text-primary border border-blue-200 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
-                            <i class="fa-solid fa-phone"></i> <span id="viewInstructorPhone"></span>
+                        <a href="#" id="viewInstructorPhoneBtn" class="flex items-center gap-2 bg-white text-primary border border-blue-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors">
+                            <i class="fa-solid fa-phone text-xs"></i> <span id="viewInstructorPhone"></span>
                         </a>
                     </div>
 
@@ -226,8 +223,8 @@
                                 <p class="text-sm font-bold text-slate-800" id="viewManagerName"></p>
                             </div>
                         </div>
-                        <a href="#" id="viewManagerPhoneBtn" class="flex items-center gap-2 bg-white text-teal-700 border border-teal-200 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-teal-100 transition-colors">
-                            <i class="fa-solid fa-phone"></i> <span id="viewManagerPhone"></span>
+                        <a href="#" id="viewManagerPhoneBtn" class="flex items-center gap-2 bg-white text-teal-700 border border-teal-200 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-teal-100 transition-colors">
+                            <i class="fa-solid fa-phone text-xs"></i> <span id="viewManagerPhone"></span>
                         </a>
                     </div>
                 </div>
@@ -263,7 +260,7 @@
                 <form id="eventForm" class="space-y-5">
                     <input type="hidden" id="eventId">
                     
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">일정 구분 *</label>
                             <select id="eventType" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
@@ -283,8 +280,8 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="col-span-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-slate-700 mb-1">과정명 *</label>
                             <input type="text" id="eventCourse" placeholder="예: 신입사원 온보딩" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                         </div>
@@ -294,7 +291,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">시작일 *</label>
                             <input type="date" id="eventStartDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
@@ -312,7 +309,7 @@
 
                     <hr class="border-slate-200">
 
-                    <div class="grid grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">강사명</label>
                             <input type="text" id="eventInstName" placeholder="강사 이름" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
@@ -323,7 +320,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 bg-teal-50/50 p-4 rounded-xl border border-teal-100">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-teal-50/50 p-4 rounded-xl border border-teal-100">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">운영자명</label>
                             <input type="text" id="eventMgrName" placeholder="운영자 이름" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
@@ -407,7 +404,6 @@
     <div id="toastContainer" class="fixed bottom-6 right-6 z-[70] flex flex-col gap-3"></div>
 
     <script>
-        // [중요] 실제 Apps Script 배포 URL로 교체해서 테스트하세요.
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJZLSkUjlwZktqRSUz7_ms3tNt6jgnco5lbujhN0qd3BWDFyllDo5tNQbTN4AMnhaD/exec';
         
         let calendar;
@@ -415,7 +411,6 @@
         let eventToDeleteId = null;
         let eventsData = [];
 
-        // 로컬 테스트용 임시 데이터
         const mockData = [
             { id: 'ev_1', type: '교육', startDate: '2026-06-20', endDate: '2026-06-22', location: '과천(3층 대강당)', courseName: '신입사원 온보딩', session: '1차', instructorName: '김강사', instructorPhone: '010-1234-5678', managerName: '이운영', managerPhone: '010-9876-5432', attendees: '30', memo: '마이크 2대 추가 세팅 필요\n다과상 앞쪽에 배치 요망' },
             { id: 'ev_2', type: '세팅', startDate: '2026-06-25', endDate: '2026-06-25', location: '마곡(2층 다목적홀)', courseName: '리더십 과정', session: '2차', instructorName: '박강사', instructorPhone: '010-1111-2222', managerName: '최운영', managerPhone: '010-3333-4444', attendees: '0', memo: '' },
@@ -433,7 +428,6 @@
                     center: 'title',
                     right: ''
                 },
-                // [요청사항 반영] 거점 필터링 결과 반영
                 events: function(info, successCallback, failureCallback) {
                     const filterValue = document.getElementById('locationFilter').value;
                     
@@ -447,15 +441,12 @@
                         endDateObj.setDate(endDateObj.getDate() + 1);
                         let fcEndDate = endDateObj.toISOString().split('T')[0];
 
-                        // 안전하게 타입 매칭
                         let safeType = e.type ? e.type.trim() : '';
                         let isEdu = !safeType.includes('세팅'); 
                         let color = isEdu ? '#005088' : '#11caa0';
                         
-                        // 달력에는 거점 이름 중 괄호 앞 부분만 짧게 표기
                         let shortLocation = e.location ? e.location.split('(')[0] : '';
 
-                        // [교육]인 경우 과정명 포함하여 타이틀 생성
                         let displayType = isEdu ? '교육' : '세팅';
                         let eventTitle = `[${displayType}] ${shortLocation} ${e.session}`;
                         if (isEdu && e.courseName) {
@@ -477,7 +468,6 @@
                     successCallback(fcEvents);
                 },
                 eventClick: function(info) {
-                    // [버그 수정] FullCalendar Event standard property와 extendedProps 안전 병합 처리
                     const eventData = {
                         id: info.event.id,
                         title: info.event.title,
@@ -486,21 +476,19 @@
                     openViewModal(eventData);
                 },
                 height: '100%',
-                dayMaxEvents: 3 // [요청사항 반영] 한 칸에 최대 3줄 노출
+                dayMaxEvents: 3
             });
             
             calendar.render();
             fetchDataFromServer();
         });
 
-        // [요청사항 반영] 거점 필터 변경 시 새로고침
         function applyLocationFilter() {
             if (calendar) {
                 calendar.refetchEvents();
             }
         }
 
-        // 날짜 객체 안전 파싱 유틸리티
         function formatDateString(dateVal) {
             if (!dateVal) return '';
             if (typeof dateVal === 'string') return dateVal.split('T')[0];
@@ -529,7 +517,6 @@
                 .then(data => {
                     if(data.error) throw new Error(data.error);
                     
-                    // [한글/영문 키 이중 호환 & 메모 누락 방지 매핑]
                     eventsData = data.map((e, index) => {
                         const id = e.id || e.ID || '';
                         const type = e.type || e['일정구분'] || '';
@@ -543,7 +530,7 @@
                         const managerName = e.managerName || e['운영자'] || '';
                         const managerPhone = e.managerPhone || e['운영자연락처'] || '';
                         const attendees = e.attendees || e['입과인원'] || '0';
-                        const memo = e.memo || e['메모'] || ''; // 한글 헤더 '메모' 완벽 대응!
+                        const memo = e.memo || e['메모'] || '';
 
                         return {
                             id: id ? String(id) : 'ev_auto_' + Date.now() + '_' + index,
@@ -602,7 +589,6 @@
         function openViewModal(eventData) {
             currentEditingId = eventData.id;
             
-            // 안전하게 타입 매칭
             let safeType = eventData.type ? eventData.type.trim() : '';
             let isEdu = !safeType.includes('세팅'); 
             let displayType = isEdu ? '교육' : '세팅';
