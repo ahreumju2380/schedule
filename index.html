@@ -58,7 +58,7 @@
         .fc .fc-button-primary:not(:disabled).fc-button-active,
         .fc .fc-button-primary:not(:disabled):active { background-color: #002c4c; border-color: #002c4c; }
         
-        /* 달력 일정 바 가늘게 3줄 보기 설정 */
+        /* 달력 일정 바 가늘고 가독성 좋게 출력 */
         .fc-event { 
             border-radius: 4px; 
             border: none; 
@@ -91,7 +91,7 @@
             .fc .fc-toolbar-title { font-size: 1.5rem; }
         }
 
-        /* 📱 초소형 모바일 화면 캘린더 세부 최적화 */
+        /* 📱 모바일 터치 최적화 폰트 */
         @media (max-width: 640px) {
             .fc .fc-toolbar-title { font-size: 1.1rem !important; }
             .fc .fc-button { padding: 4px 6px !important; font-size: 0.75rem !important; }
@@ -176,7 +176,6 @@
                             <p class="text-sm font-bold" id="viewDates"></p>
                         </div>
                     </div>
-                    <!-- '거점' -> '장소'로 변경 -->
                     <div class="flex items-start gap-3">
                         <div class="bg-slate-100 p-2 rounded-lg text-primary"><i class="fa-solid fa-location-dot w-5 text-center"></i></div>
                         <div>
@@ -264,7 +263,6 @@
                 <form id="eventForm" class="space-y-5">
                     <input type="hidden" id="eventId">
                     
-                    <!-- [분리 입력 추가] 장소 대분류 및 상세 교육장 텍스트박스 구성 -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">일정 구분 *</label>
@@ -342,7 +340,6 @@
                         </div>
                     </div>
 
-                    <!-- 메모 입력 영역 -->
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">메모 (선택)</label>
                         <textarea id="eventMemo" rows="3" placeholder="준비물, 특이사항 등 전달할 메모를 입력하세요" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"></textarea>
@@ -415,7 +412,6 @@
     <div id="toastContainer" class="fixed bottom-6 right-6 z-[70] flex flex-col gap-3"></div>
 
     <script>
-        // [중요] 실제 Apps Script 배포 URL로 교체해서 테스트하세요.
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJZLSkUjlwZktqRSUz7_ms3tNt6jgnco5lbujhN0qd3BWDFyllDo5tNQbTN4AMnhaD/exec';
         
         let calendar;
@@ -559,7 +555,7 @@
                             managerName: String(managerName).trim(),
                             managerPhone: String(managerPhone).trim(),
                             attendees: String(attendees).trim(),
-                            memo: String(memo) // 메모 스트링 변환 강제
+                            memo: String(memo).trim() // 앞뒤 공백 제거 및 완벽한 형변환
                         };
                     });
 
@@ -628,7 +624,8 @@
             document.getElementById('viewAttendees').textContent = eventData.attendees && eventData.attendees !== '0' ? `${eventData.attendees}명` : '-';
             
             const memoEl = document.getElementById('viewMemo');
-            if (eventData.memo && eventData.memo.trim() !== "" && eventData.memo !== 'undefined') {
+            // 'undefined' 문자열이나 'null'이 그대로 노출되는 방어 코드 추가
+            if (eventData.memo && eventData.memo.trim() !== "" && eventData.memo !== 'undefined' && eventData.memo !== 'null') {
                 memoEl.textContent = eventData.memo;
                 memoEl.classList.remove('text-slate-400', 'italic');
                 memoEl.classList.add('text-slate-700');
@@ -671,7 +668,6 @@
                     let safeType = ev.type ? ev.type.trim() : '교육';
                     document.getElementById('eventType').value = safeType;
 
-                    // 장소 파싱: '과천(3층 대강당)' -> '과천' 드롭다운 선택, '3층 대강당' 텍스트박스 바인딩
                     let safeLoc = ev.location ? ev.location.trim() : '';
                     let mainLoc = safeLoc;
                     let venueLoc = '';
@@ -688,7 +684,7 @@
                         document.getElementById('eventVenue').value = venueLoc;
                     } else if (safeLoc) {
                         locSelect.value = "기타";
-                        document.getElementById('eventVenue').value = safeLoc; // 매칭되지 않는 완전 가변 텍스트 전체 전달
+                        document.getElementById('eventVenue').value = safeLoc; 
                     } else {
                         locSelect.value = "";
                         document.getElementById('eventVenue').value = "";
@@ -703,7 +699,7 @@
                     document.getElementById('eventInstPhone').value = ev.instructorPhone || '';
                     document.getElementById('eventMgrName').value = ev.managerName || '';
                     document.getElementById('eventMgrPhone').value = ev.managerPhone || '';
-                    document.getElementById('eventMemo').value = (ev.memo && ev.memo !== 'undefined') ? ev.memo : ''; 
+                    document.getElementById('eventMemo').value = (ev.memo && ev.memo !== 'undefined' && ev.memo !== 'null') ? ev.memo : ''; 
                 }
             }
             openModal('editModal');
@@ -718,7 +714,6 @@
             const form = document.getElementById('eventForm');
             if(!form.checkValidity()) { form.reportValidity(); return; }
 
-            // 장소 결합 처리: '마곡' + '2층 대강당' -> '마곡(2층 대강당)' 포맷 변환
             const locVal = document.getElementById('eventLocation').value;
             const venueVal = document.getElementById('eventVenue').value.trim();
             const combinedLocation = venueVal ? `${locVal}(${venueVal})` : locVal;
@@ -736,7 +731,7 @@
                 instructorPhone: document.getElementById('eventInstPhone').value,
                 managerName: document.getElementById('eventMgrName').value,
                 managerPhone: document.getElementById('eventMgrPhone').value,
-                memo: document.getElementById('eventMemo').value // 메모 정상 바인딩
+                memo: document.getElementById('eventMemo').value.trim() // 메모 값을 정제하여 바인딩
             };
 
             if (document.getElementById('eventId').value) {
@@ -806,7 +801,7 @@
                 if(result.success) {
                     statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-400"></i> 동기화 완료';
                     showToast(successMessage, 'success');
-                    fetchDataFromServer(); // 저장 완료 후 백엔드에서 데이터 강제 갱신으로 화면 정합성 확보
+                    fetchDataFromServer(); // 저장 후 서버 데이터를 리로드하여 화면 무결성 검증
                 } else {
                     throw new Error('Save Failed: ' + result.error);
                 }
