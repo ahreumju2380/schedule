@@ -50,8 +50,8 @@
             background-color: #ffffff;
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            padding: 20px;
-            height: calc(100vh - 120px);
+            padding: 10px;
+            height: 100%;
         }
         
         .fc .fc-toolbar-title { font-size: 1.5rem; font-weight: 700; color: #005088; }
@@ -84,20 +84,46 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .toast-enter { animation: slideUp 0.3s ease-out forwards; }
+
+        /* PC 버전 패딩 및 여백 정의 */
+        @media (min-width: 768px) {
+            .fc {
+                padding: 20px;
+            }
+        }
+
+        /* 📱 초소형 기기 및 모바일 화면 전용 캘린더 미세 스타일 조정 */
+        @media (max-width: 640px) {
+            .fc .fc-toolbar-title { font-size: 1.15rem !important; }
+            .fc .fc-button { padding: 4px 8px !important; font-size: 0.8rem !important; }
+            .fc-col-header-cell-cushion { padding: 6px 0 !important; font-size: 0.8rem !important; }
+            .fc-daygrid-day-number { padding: 4px !important; font-size: 0.75rem !important; }
+            .fc-event { font-size: 0.55rem !important; padding: 0.5px 2px !important; }
+        }
     </style>
 </head>
 <body class="text-slate-800 h-screen overflow-hidden flex flex-col">
 
-    <header class="bg-primary text-white shadow-md p-4 flex justify-between items-center z-10 shrink-0">
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-calendar-check text-2xl text-secondary"></i>
-            <h1 class="text-xl font-bold tracking-tight">교육 일정 관리 대시보드</h1>
+    <!-- [반응형 수정] 헤더를 모바일에서는 세로(flex-col), PC에서는 가로(flex-row) 레이아웃으로 변경 -->
+    <header class="bg-primary text-white shadow-md p-3 md:p-4 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 md:gap-4 z-10 shrink-0">
+        <!-- 타이틀 구역 및 모바일 전용 등록 버튼 -->
+        <div class="flex items-center justify-between md:justify-start gap-3">
+            <div class="flex items-center gap-2 md:gap-3">
+                <i class="fa-solid fa-calendar-check text-xl md:text-2xl text-secondary"></i>
+                <h1 class="text-base md:text-xl font-bold tracking-tight whitespace-nowrap">교육 일정 관리 대시보드</h1>
+            </div>
+            <!-- 모바일 전용 일정 등록 버튼 (PC 미노출) -->
+            <button onclick="openEditModal()" class="md:hidden bg-secondary hover:bg-teal-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-1">
+                <i class="fa-solid fa-plus text-[10px]"></i> 등록
+            </button>
         </div>
-        <div class="flex items-center gap-4">
-            <!-- [요청사항 반영] 거점별 필터 드롭다운 추가 -->
-            <div class="flex items-center gap-2">
-                <label for="locationFilter" class="text-sm font-medium text-slate-200"><i class="fa-solid fa-filter"></i> 거점 필터:</label>
-                <select id="locationFilter" onchange="applyLocationFilter()" class="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer">
+
+        <!-- 컨트롤 영역: 필터 및 동기화 상태 -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-4 flex-grow md:flex-grow-0 justify-end">
+            <!-- [요청사항 반영] 거점별 필터 드롭다운 디자인 개선 -->
+            <div class="flex items-center gap-2 flex-grow sm:flex-grow-0">
+                <label for="locationFilter" class="text-xs md:text-sm font-medium text-slate-200 shrink-0"><i class="fa-solid fa-filter"></i> 거점 필터:</label>
+                <select id="locationFilter" onchange="applyLocationFilter()" class="w-full sm:w-auto bg-white/10 text-white border border-white/20 rounded-lg px-2.5 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer">
                     <option value="all" class="text-slate-800">전체보기</option>
                     <option value="과천" class="text-slate-800">과천(3층 대강당)</option>
                     <option value="마곡" class="text-slate-800">마곡(2층 다목적홀)</option>
@@ -106,19 +132,22 @@
                 </select>
             </div>
             
-            <div id="sync-status" class="text-sm text-secondary bg-white/10 px-3 py-1 rounded-full flex items-center gap-2">
-                <i class="fa-solid fa-cloud-arrow-up"></i> 시트 연동 대기중
+            <div class="flex items-center justify-between sm:justify-end gap-2">
+                <div id="sync-status" class="text-xs md:text-sm text-secondary bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-1.5 justify-center flex-grow sm:flex-grow-0">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> 시트 연동 대기중
+                </div>
+                <button id="troubleshootBtn" onclick="openModal('errorModal')" class="hidden bg-red-500/20 text-red-100 hover:bg-red-500/40 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border border-red-400/50 shrink-0">
+                    <i class="fa-solid fa-circle-question"></i> 해결방법
+                </button>
+                <!-- PC 전용 일정 등록 버튼 (모바일 미노출) -->
+                <button onclick="openEditModal()" class="hidden md:flex bg-secondary hover:bg-teal-500 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm items-center gap-2 text-sm shrink-0">
+                    <i class="fa-solid fa-plus"></i> 새 일정 등록
+                </button>
             </div>
-            <button id="troubleshootBtn" onclick="openModal('errorModal')" class="hidden bg-red-500/20 text-red-100 hover:bg-red-500/40 px-3 py-1 rounded-full text-sm font-medium transition-colors border border-red-400/50">
-                <i class="fa-solid fa-circle-question"></i> 연동 해결방법
-            </button>
-            <button onclick="openEditModal()" class="bg-secondary hover:bg-teal-500 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
-                <i class="fa-solid fa-plus"></i> 새 일정 등록
-            </button>
         </div>
     </header>
 
-    <main class="flex-grow p-4 md:p-6 overflow-hidden flex flex-col">
+    <main class="flex-grow p-3 md:p-6 overflow-hidden flex flex-col">
         <div id="calendar" class="w-full h-full"></div>
     </main>
 
@@ -354,7 +383,7 @@
                 
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                     <h3 class="font-bold text-slate-800 mb-1 text-base">1. 시트 안에서 스크립트를 열지 않은 경우</h3>
-                    <p class="mt-1"><b>데이터를 저장할 구글 스프레드시트를 먼저 여신 후, 상단 메뉴의 [확장 프로그램] > [Apps Script]</b>를 통해 코드를 작성해야 합니다.</p>
+                    <p class="mt-1"><b>데이터를 저장할 구글 스프레드시트를 먼저 여신 후, 상단 메뉴 of [확장 프로그램] > [Apps Script]</b>를 통해 코드를 작성해야 합니다.</p>
                 </div>
                 
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
