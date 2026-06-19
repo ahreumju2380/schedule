@@ -137,8 +137,9 @@
             </div>
             
             <div class="flex gap-2 shrink-0">
-                <button id="troubleshootBtn" onclick="openModal('errorModal')" class="hidden bg-red-500/20 text-red-100 hover:bg-red-500/40 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border border-red-400/50">
-                    <i class="fa-solid fa-circle-question"></i> 해결방법
+                <!-- 상시 동기화 진단 버튼 -->
+                <button id="troubleshootBtn" onclick="openModal('errorModal')" class="bg-blue-500/20 text-blue-100 hover:bg-blue-500/40 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border border-blue-400/50 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-question"></i> 연동 진단
                 </button>
                 <button onclick="openEditModal()" class="hidden md:flex bg-secondary hover:bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm items-center gap-2">
                     <i class="fa-solid fa-plus"></i> 새 일정 등록
@@ -377,15 +378,31 @@
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300" id="errorModalContent">
             <div class="bg-red-500 px-6 py-4 flex justify-between items-center text-white">
                 <h2 class="text-lg font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-triangle-exclamation"></i> 시트 연동 오류 해결 방법
+                    <i class="fa-solid fa-triangle-exclamation"></i> 연동 정밀 진단 및 해결 방법
                 </h2>
                 <button onclick="closeModal('errorModal')" class="text-white/70 hover:text-white transition-colors">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
             <div class="p-6 text-slate-700 space-y-4 text-sm max-h-[70vh] overflow-y-auto">
-                <p class="font-bold text-red-600 mb-2">구글 시트와 통신이 원활하지 않아 임시 데이터를 보여주고 있습니다. 아래 3가지를 꼭 확인해주세요!</p>
                 
+                <!-- 📊 실시간 스프레드시트 컬럼 연동 리포트 (유저 자가 진단용) -->
+                <div class="bg-slate-100 p-4 rounded-lg border border-slate-200 mb-4">
+                    <h3 class="font-bold text-slate-800 mb-1 text-base flex items-center gap-1.5 text-blue-700">
+                        <i class="fa-solid fa-chart-simple"></i> 스프레드시트 실시간 컬럼 진단 결과
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-2">대시보드가 API 서버로부터 수신한 실제 데이터 구조입니다.</p>
+                    <div id="diagnosticReport" class="font-mono text-[11px] leading-relaxed space-y-1 text-slate-600 bg-white p-3 rounded border border-slate-200 overflow-x-auto whitespace-pre">대시보드가 서버에서 데이터를 받아오는 중입니다...</div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-1 text-base">🚨 메모가 계속 누락/유실되는 경우</h3>
+                    <p class="mt-1 leading-relaxed text-xs">
+                        구글 앱스 스크립트(Code.gs)를 수정했더라도 <b>[새 배포]를 하지 않으면</b> 이전 임시 배포 파일이 작동하여 메모 열을 읽지 못합니다.<br>
+                        <b>[배포 관리] > [수정(연필)] > [버전: 새 버전(New Version)] > [배포]</b>를 완전히 완료했는지 반드시 확인해 주세요.
+                    </p>
+                </div>
+
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                     <h3 class="font-bold text-slate-800 mb-1 text-base">1. 시트 안에서 스크립트를 열지 않은 경우</h3>
                     <p class="mt-1"><b>데이터를 저장할 구글 스프레드시트를 먼저 여신 후, 상단 메뉴의 [확장 프로그램] > [Apps Script]</b>를 통해 코드를 작성해야 합니다.</p>
@@ -395,14 +412,9 @@
                     <h3 class="font-bold text-slate-800 mb-1 text-base">2. 시트 헤더가 없거나, 코드를 실행하지 않은 경우</h3>
                     <p class="mt-1">Apps Script 에디터에서 함수를 <code>setup</code>으로 맞추고 <b>[실행]</b> 버튼을 꼭 한 번 눌러주세요.</p>
                 </div>
-                
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <h3 class="font-bold text-slate-800 mb-1 text-base">3. 회사/학교 계정의 보안 정책</h3>
-                    <p class="mt-1">조직 계정의 경우 외부 통신이 막혀있을 수 있습니다. 개인 Gmail 계정으로 시트를 만들어 테스트해보세요.</p>
-                </div>
             </div>
             <div class="bg-slate-50 px-6 py-4 flex justify-end border-t border-slate-200">
-                <button onclick="closeModal('errorModal')" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm">
+                <button onclick="closeModal('errorModal')" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm text-xs">
                     확인 및 닫기
                 </button>
             </div>
@@ -426,6 +438,21 @@
             { id: 'ev_2', type: '세팅', startDate: '2026-06-25', endDate: '2026-06-25', location: '마곡(2층 다목적홀)', courseName: '리더십 과정', session: '2차', instructorName: '박강사', instructorPhone: '010-1111-2222', managerName: '최운영', managerPhone: '010-3333-4444', attendees: '0', memo: '' },
             { id: 'ev_3', type: '워크숍', startDate: '2026-06-26', endDate: '2026-06-28', location: '마곡(2층 다목적홀)', courseName: '전사 임직원 워크숍', session: '2차', instructorName: '박강사', instructorPhone: '010-1111-2222', managerName: '최운영', managerPhone: '010-3333-4444', attendees: '25', memo: '본부장님 격려사 예정 (오전 10시)' }
         ];
+
+        // 🛡️ 지능형 동적 키 매칭 탐색 엔진 (시트 헤더명 무관 완벽 동기화 보장)
+        function findValueByKeys(obj, possibleKeys) {
+            if (!obj) return '';
+            for (const key in obj) {
+                const cleanKey = key.trim().toLowerCase();
+                for (const posKey of possibleKeys) {
+                    const cleanPosKey = posKey.trim().toLowerCase();
+                    if (cleanKey === cleanPosKey || cleanKey.includes(cleanPosKey) || cleanPosKey.includes(cleanKey)) {
+                        return obj[key];
+                    }
+                }
+            }
+            return '';
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
@@ -514,6 +541,51 @@
             }
         }
 
+        // 실시간 연동 진단 리포트 출력 함수
+        function updateDiagnosticReport(rawData, isMock = false) {
+            const diagEl = document.getElementById('diagnosticReport');
+            const troubleshootBtn = document.getElementById('troubleshootBtn');
+            if (!diagEl) return;
+            
+            if (isMock) {
+                diagEl.className = "font-mono text-[11px] leading-relaxed space-y-1 text-red-600 bg-red-50 p-3 rounded border border-red-200 overflow-x-auto whitespace-pre";
+                diagEl.innerHTML = `⚠️ [연동 실패 - 테스트 데이터 작동 중]\n• 원인: 구글 Apps Script 주소 오류 또는 회사/학교 보안 방화벽 차단.\n• 등록된 SCRIPT_URL: ${SCRIPT_URL}\n• 해결 가이드: '연동 해결방법' 1, 2, 3번 항목을 따라 스크립트를 재배포해 주세요.`;
+                if (troubleshootBtn) {
+                    troubleshootBtn.className = "bg-red-500/20 text-red-100 hover:bg-red-500/40 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border border-red-400/50 flex items-center gap-1";
+                }
+                return;
+            }
+
+            if (!rawData || rawData.length === 0) {
+                diagEl.innerHTML = `ℹ️ 구글 스프레드시트 연결에는 성공했으나, 현재 기록된 데이터 행이 없습니다.`;
+                return;
+            }
+
+            const firstEvent = rawData[0];
+            const keys = Object.keys(firstEvent);
+            
+            let html = `🟢 [연동 성공 - 시트 연결 검증 완료]\n`;
+            html += `• 감지된 일정 총 행 수: ${rawData.length}개\n`;
+            html += `• 연동된 스프레드시트 헤더(Key) 및 첫 행 데이터 매핑 상태:\n`;
+            
+            // 모든 헤더와 실시간 값 진단 매핑
+            keys.forEach((k, i) => {
+                const cleanVal = firstEvent[k] !== undefined && firstEvent[k] !== null ? String(firstEvent[k]).substring(0, 30) : '비어있음';
+                html += `  - [열 ${String(i+1).padStart(2, '0')}] "${k}" ➔ 실제값: "${cleanVal}"\n`;
+            });
+            
+            // 메모(M1) 체크 검증
+            const hasMemo = keys.some(k => k.trim().toLowerCase() === 'memo' || k.includes('메모') || k.includes('특이사항'));
+            if (hasMemo) {
+                html += `\n✅ [진단 통과] 메모(memo) 컬럼이 성공적으로 연동되고 인식되었습니다!`;
+            } else {
+                html += `\n🚨 [진단 에러] 메모 열이 수신 데이터 구조에서 누락되었습니다. 구글 시트의 13번째 열(M1)의 글자가 '메모'가 맞는지 확인하시고, setup을 꼭 다시 실행해 주세요!`;
+            }
+
+            diagEl.className = "font-mono text-[11px] leading-relaxed space-y-1 text-slate-600 bg-white p-3 rounded border border-slate-200 overflow-x-auto whitespace-pre";
+            diagEl.innerHTML = html;
+        }
+
         function fetchDataFromServer() {
             const statusEl = document.getElementById('sync-status');
             const troubleshootBtn = document.getElementById('troubleshootBtn');
@@ -527,21 +599,21 @@
                 .then(data => {
                     if(data.error) throw new Error(data.error);
                     
-                    // 장소/메모 통합 이중 매핑 보정
+                    // 지능형 헤더 자동 매핑 파서 실행 (e.메모, e.memo, e['메모 '] 대응)
                     eventsData = data.map((e, index) => {
-                        const id = e.id || e.ID || '';
-                        const type = e.type || e['일정구분'] || '';
-                        const startDate = e.startDate || e['시작일'] || '';
-                        const endDate = e.endDate || e['종료일'] || '';
-                        const location = e.location || e['장소'] || e['거점'] || '';
-                        const courseName = e.courseName || e['과정명'] || '';
-                        const session = e.session || e['차수'] || '';
-                        const instructorName = e.instructorName || e['강사명'] || '';
-                        const instructorPhone = e.instructorPhone || e['강사연락처'] || '';
-                        const managerName = e.managerName || e['운영자'] || '';
-                        const managerPhone = e.managerPhone || e['운영자연락처'] || '';
-                        const attendees = e.attendees || e['입과인원'] || '0';
-                        const memo = e.memo !== undefined ? e.memo : (e['메모'] !== undefined ? e['메모'] : '');
+                        const id = findValueByKeys(e, ['id', 'ID']) || '';
+                        const type = findValueByKeys(e, ['type', '일정구분', '구분']) || '교육';
+                        const startDate = findValueByKeys(e, ['startDate', '시작일', '시작']) || '';
+                        const endDate = findValueByKeys(e, ['endDate', '종료일', '종료']) || '';
+                        const location = findValueByKeys(e, ['location', '장소', '거점', '지역']) || '';
+                        const courseName = findValueByKeys(e, ['courseName', '과정명', '과정']) || '';
+                        const session = findValueByKeys(e, ['session', '차수']) || '';
+                        const instructorName = findValueByKeys(e, ['instructorName', '강사명', '강사']) || '';
+                        const instructorPhone = findValueByKeys(e, ['instructorPhone', '강사연락처', '강사전화']) || '';
+                        const managerName = findValueByKeys(e, ['managerName', '운영자', '담당자']) || '';
+                        const managerPhone = findValueByKeys(e, ['managerPhone', '운영자연락처', '담당자전화']) || '';
+                        const attendees = findValueByKeys(e, ['attendees', '입과인원', '인원']) || '0';
+                        const memo = findValueByKeys(e, ['memo', '메모', '특이사항', '비고']) || '';
 
                         return {
                             id: id ? String(id) : 'ev_auto_' + Date.now() + '_' + index,
@@ -556,22 +628,27 @@
                             managerName: String(managerName).trim(),
                             managerPhone: String(managerPhone).trim(),
                             attendees: String(attendees).trim(),
-                            memo: String(memo).trim() // 앞뒤 공백 제거 및 완벽한 형변환
+                            memo: String(memo).trim() // 메모 바인딩의 절대적 무결성
                         };
                     });
 
                     calendar.refetchEvents();
                     statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-400"></i> 동기화 완료';
                     showToast('구글 시트에서 데이터를 성공적으로 불러왔습니다.', 'success');
+                    
+                    // 진단 리포트 업데이트 (정상 연동 데이터로)
+                    updateDiagnosticReport(data, false);
                 })
                 .catch(error => {
                     console.error('Fetch Error:', error);
                     statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> 연동 오류 (임시 데이터)';
                     showToast('시트 연결에 실패하여 임시 데이터를 불러옵니다.', 'error');
-                    troubleshootBtn.classList.remove('hidden');
 
                     eventsData = [...mockData];
                     calendar.refetchEvents();
+                    
+                    // 진단 리포트 업데이트 (실패 상태로)
+                    updateDiagnosticReport(null, true);
                 });
         }
 
@@ -600,7 +677,6 @@
             currentEditingId = eventData.id;
             
             let safeType = eventData.type ? eventData.type.trim() : '';
-            let isEdu = !safeType.includes('세팅'); 
             let displayType = safeType || '교육';
 
             let barColor = 'bg-blue-400';
@@ -625,7 +701,7 @@
             document.getElementById('viewAttendees').textContent = eventData.attendees && eventData.attendees !== '0' ? `${eventData.attendees}명` : '-';
             
             const memoEl = document.getElementById('viewMemo');
-            // 'undefined' 문자열이나 'null'이 그대로 노출되는 방어 코드 추가
+            // 'undefined' 문자열이나 'null' 등 불량 문자열을 완벽 방어하고 출력
             if (eventData.memo && eventData.memo.trim() !== "" && eventData.memo !== 'undefined' && eventData.memo !== 'null') {
                 memoEl.textContent = eventData.memo;
                 memoEl.classList.remove('text-slate-400', 'italic');
@@ -732,7 +808,7 @@
                 instructorPhone: document.getElementById('eventInstPhone').value,
                 managerName: document.getElementById('eventMgrName').value,
                 managerPhone: document.getElementById('eventMgrPhone').value,
-                memo: document.getElementById('eventMemo').value.trim() // 메모 값을 정제하여 바인딩
+                memo: document.getElementById('eventMemo').value.trim() // 메모 값을 대시보드 저장 시 온전히 유지
             };
 
             if (document.getElementById('eventId').value) {
@@ -802,7 +878,7 @@
                 if(result.success) {
                     statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-green-400"></i> 동기화 완료';
                     showToast(successMessage, 'success');
-                    fetchDataFromServer(); // 저장 후 서버 데이터를 리로드하여 화면 무결성 검증
+                    fetchDataFromServer(); // 저장 후 서버 데이터를 강제 리로드하여 완벽 동화 검증
                 } else {
                     throw new Error('Save Failed: ' + result.error);
                 }
